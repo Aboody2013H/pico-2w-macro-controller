@@ -1,0 +1,240 @@
+PICO 2 W LIVE METADATA REPORT
+Captured directly from the connected device and its exact flashed UF2 artifact.
+No source-repository line counts are included.
+
+IDENTITY
+========
+Board: Raspberry Pi Pico 2 W
+Chip reported by CircuitPython: rp2350a
+Board ID: raspberry_pi_pico2_w
+CircuitPython: 10.2.1-dirty
+CircuitPython build date: 2026-08-28
+Device UID: 0A06C9DC0B0CBB51
+Wi-Fi MAC: 88:A2:9E:10:7A:E2
+USB VID: 0x239A
+USB PID: 0x8162
+USB revision: 0x0100
+USB serial/instance ID: 0A06C9DC0B0CBB51
+USB container ID: 2C1FE6EA-788C-5E67-9774-79BF65EAA989
+Live serial port: COM6
+Reported serial maximum baud: 115200
+
+USB INTERFACES PRESENT
+======================
+MI_00: CircuitPython CDC control / USB serial
+MI_02: CircuitPython Mass Storage
+MI_03: CircuitPython HID
+  HID collection 1: keyboard
+  HID collection 2: mouse
+  HID collection 3: consumer control
+MI_04: CircuitPython Audio
+Mass-storage class/subclass/protocol: 08/06/50
+HID class/subclass/protocol: 03/00/00
+CDC class/subclass/protocol: 02/02/00
+Audio class/subclass/protocol: 01/01/00
+
+LIVE STORAGE DEVICE
+===================
+Windows disk number: 1
+Bus: USB
+Reported manufacturer: Raspberr
+Reported model: Pico 2 W
+Reported disk firmware revision: 1.0
+Reported disk serial: 0A06C9DC0B0CBB50
+Disk size exposed over USB: 2,617,856 bytes
+Disk allocated size: 2,617,856 bytes
+Partition style: MBR
+Partition count: 1
+Partition number: 1
+Partition type: Logical
+MBR type: 6
+Partition offset: 512 bytes
+Partition size: 2,617,344 bytes
+Logical sector size: 512 bytes
+Physical sector size: 512 bytes
+Drive letter: D:
+Volume label exposed by Windows: CIRCUITP
+Filesystem: FAT, read/write
+Filesystem volume serial: 0x5D1C9690
+Filesystem allocation unit/cluster: 512 bytes
+Filesystem logical volume size: 510,464 bytes
+Free filesystem bytes: 347,648
+Used filesystem bytes: 162,816
+Free percentage: 68.104312939%
+Used percentage: 31.895687061%
+Maximum filename component: 255
+Trim: unsupported
+Thin provisioning: no
+DAX: no
+
+INSTALLED FILE TOTALS
+=====================
+Files: 48
+Directories below root: 11
+Logical bytes in all files: 141,037
+FAT clusters allocated to files: 154,624 bytes
+File cluster slack: 13,587 bytes
+Filesystem overhead and directory allocation: 8,192 bytes
+Readable text files: 9
+Compiled MPY files: 39
+Readable UTF-8 bytes: 71,919
+Compiled MPY binary bytes: 69,118
+
+READABLE TEXT COUNTS
+====================
+Physical text lines, all readable files: 1,085
+Readable Unicode characters: 71,850
+Letters: 45,729
+Digits: 3,039
+Whitespace characters: 9,380
+Punctuation characters: 11,647
+Symbol characters: 2,053
+Other/control characters: 2
+Category check sum: 71,850
+
+APPLICATION CODE COUNTS
+=======================
+code.py: 913 lines, 28,604 characters, 28,614 bytes
+index.html: 50 minified lines, 21,760 characters, 21,779 bytes
+builder.html: 50 minified lines, 18,593 characters, 18,630 bytes
+Application total: 1,013 physical lines, 68,957 characters, 69,023 bytes
+
+OTHER READABLE FILE COUNTS
+==========================
+boot_out.txt: 4 lines, 163 characters, 163 bytes
+README.txt: 51 lines, 2,300 characters, 2,303 bytes
+settings.toml: 8 lines, 166 characters, 166 bytes
+settings.toml.example: 8 lines, 207 characters, 207 bytes
+sd/placeholder.txt: 1 line, 57 characters, 57 bytes
+lib/adafruit_ble/services/microbit.py: 0 lines, 0 characters, 0 bytes
+
+FILE TYPE TOTALS
+================
+.html: 2 files, 40,409 bytes
+.py: 2 files, 28,614 bytes
+.mpy: 39 files, 69,118 bytes
+.toml: 1 file, 166 bytes
+.example: 1 file, 207 bytes
+.txt: 3 files, 2,523 bytes
+
+FLASHED UF2 IMAGE METADATA
+==========================
+UF2 container size: 3,955,712 bytes
+UF2 blocks: 7,726
+Payload per UF2 block: 256 bytes
+UF2 payload bytes programmed: 1,977,856
+UF2 wrapper/metadata/padding bytes: 1,977,856
+UF2 flags: 0x00002000 (family ID present)
+UF2 family ID: 0xE48BFF59 (RP2350 ARM-S)
+Target minimum address: 0x10000000
+Target maximum exclusive address: 0x10200000
+Programmed address segment 1: 0x10000000-0x10163E00
+Programmed address segment 2: 0x10181000-0x10200000
+Firmware blocks: 5,694
+Firmware payload bytes: 1,457,664
+Filesystem blocks: 2,032
+Filesystem-image payload bytes: 520,192
+Zero-valued payload bytes: 492,767
+Nonzero payload bytes: 1,485,089
+UF2 SHA-256: 4919FBB5336967D9FF4BF8A735777C8ED36283603F72BA30E0B91EA8C2AC3694
+All-payload SHA-256: 97FA43D2721BA73EE2CFEAB9783F3C4FA0FA960EC0B562214829FE7EBE604BDC
+Firmware-payload SHA-256: B40181F79F2381F6075E4F6675E41646BC0A7D26CB78DE7912225E7BD13DC9F3
+Filesystem-payload SHA-256: 81B2E910B72A89810469331CBAFD03890EF0215FA42D046C45C89E56E70199F0
+
+LIVE WEB STATE AT INSPECTION
+============================
+IPv4 address: 192.168.1.88
+HTTP port: 80
+mouse: false
+space: false
+walk: false
+active custom macro IDs: []
+Root Cache-Control: no-store, max-age=0
+Root Pragma: no-cache
+Root Content-Type: text/html
+Root Content-Length: 21,779 bytes
+
+DIRECTORIES
+===========
+lib
+lib/adafruit_ble
+lib/adafruit_ble/advertising
+lib/adafruit_ble/attributes
+lib/adafruit_ble/characteristics
+lib/adafruit_ble/services
+lib/adafruit_ble/services/standard
+lib/adafruit_ble/uuid
+lib/adafruit_hid
+lib/adafruit_httpserver
+sd
+
+PER-FILE INVENTORY
+Columns: path | logical bytes | allocated bytes | lines | characters | SHA-256
+Compiled .mpy files have N/A lines and characters.
+==========================================================================
+boot_out.txt | 163 | 512 | 4 | 163 | 62AC6918ECE645407F99126FC915FEBB9F79198FC8244DDE7BBE6769245CB2D7
+builder.html | 18630 | 18944 | 50 | 18593 | 257F94467F6AC4A6684B48DAB694248BDE73F2941FDE9FE20ED36D07CC595A42
+code.py | 28614 | 28672 | 913 | 28604 | 7A62F4610C3D1E107A0AA3718734E72A4E08CF457B2B654D4DB49BB5F475D4C5
+index.html | 21779 | 22016 | 50 | 21760 | B61FE2486EDC2809E091963B5AE7480F2A2018F3055A17086C3B9D64FBC61856
+lib/adafruit_ble/__init__.mpy | 3115 | 3584 | N/A | N/A | EE5540288892232B62F21CDCEEC66D949F2A7BCEE4BD9C6ADE724D60849BD7BF
+lib/adafruit_ble/advertising/__init__.mpy | 3385 | 3584 | N/A | N/A | 803AEDDF7A17EAD4A797C2FE4ACE1A6D71BB9F767407AEBEB9BAFE7BCC576376
+lib/adafruit_ble/advertising/adafruit.mpy | 617 | 1024 | N/A | N/A | E103B778C98BA85B76742C9E53B6AB725B666725C7A469B5431A73B02A06381E
+lib/adafruit_ble/advertising/standard.mpy | 4769 | 5120 | N/A | N/A | 5463B317A0FCF0B9B8E03BC87DE733268904F91FB9EA4301E47F78E9E98A5B09
+lib/adafruit_ble/attributes/__init__.mpy | 388 | 512 | N/A | N/A | 91EC30EC1160E3DD9FE4362D805EDC08F4AA41D0348A58C8FC7C8450EC2F270E
+lib/adafruit_ble/characteristics/__init__.mpy | 2176 | 2560 | N/A | N/A | C11F819A3D3D7170A2760414757FDE33FCC5E72088E7E5A9374E2C0AB38A46C9
+lib/adafruit_ble/characteristics/float.mpy | 822 | 1024 | N/A | N/A | 06236094608DE93296B4ADF38E12E14C4BABBC2B10A120B6764A84BD0C894A4A
+lib/adafruit_ble/characteristics/int.mpy | 1705 | 2048 | N/A | N/A | 5CF0723731B04259C5912AF5ADC01F53283FAD148FF256A5D02A83B523BE6274
+lib/adafruit_ble/characteristics/json.mpy | 974 | 1024 | N/A | N/A | D7E61ABF1347F02861BF9B9468B280EF31A4DB8C3A348199DC4B7C8AFD57E475
+lib/adafruit_ble/characteristics/stream.mpy | 1369 | 1536 | N/A | N/A | FCBE761DE19C2D2DDA411E9C40EEA8644FC7B9041C1437586A32BB9D6350D7F3
+lib/adafruit_ble/characteristics/string.mpy | 1059 | 1536 | N/A | N/A | 9E35BFBC5151D878526D7AF4CCAC20CCC5674DD51DF1F2EAA9EDB7FFE2A0F013
+lib/adafruit_ble/services/__init__.mpy | 784 | 1024 | N/A | N/A | 80C3E3EFCC140293752E5C44D78A9E36D202DF1B15A86A2102C05E48D9BED052
+lib/adafruit_ble/services/circuitpython.mpy | 669 | 1024 | N/A | N/A | 141E8E08A6842B8FE8E20F85B0125E824EFB15EC9B13EF1D4031F7C85F31A85F
+lib/adafruit_ble/services/microbit.py | 0 | 0 | 0 | 0 | E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855
+lib/adafruit_ble/services/nordic.mpy | 1153 | 1536 | N/A | N/A | 2FFEF9E376C57DAF7BD707B2D9F111ADF7026504F218CC42EDAA4B9521250FE2
+lib/adafruit_ble/services/sphero.mpy | 282 | 512 | N/A | N/A | 72470F450D12684F5C5D59AE3DE4465EDCEEFD27C391CBCE27966888B9A41713
+lib/adafruit_ble/services/standard/__init__.mpy | 1103 | 1536 | N/A | N/A | E1C93B43FA487D6674EAB83BF3D426CFAF07A3FAFD9F589701E9F44EF0C385D6
+lib/adafruit_ble/services/standard/device_info.mpy | 1126 | 1536 | N/A | N/A | 7B0EA90CCBCBF2C40694014EA7D21B7DA8D047E816156DF28EAB4127463F618A
+lib/adafruit_ble/services/standard/hid.mpy | 3726 | 4096 | N/A | N/A | B7281C8963A6D381D05AC6A09762FB4A1F5F9BF81B7B15423DB8C55362A50787
+lib/adafruit_ble/uuid/__init__.mpy | 697 | 1024 | N/A | N/A | 12970722D346B8FAE3E226674472F8E6EE4AE0C22AD6FDD03DB061FF836ECAF6
+lib/adafruit_hid/__init__.mpy | 745 | 1024 | N/A | N/A | F175EC731FA56BDB306C31B8B38B386230C304B2DD73FF8D65233B9340800000
+lib/adafruit_hid/consumer_control_code.mpy | 379 | 512 | N/A | N/A | 073CC71D0AD2C2C06AC202A6744C5D24734A857FFD5CE6D056ED4766CCF72007
+lib/adafruit_hid/consumer_control.mpy | 625 | 1024 | N/A | N/A | 261D6E629F0594256F5F314154949901619736F705BA620569C79E69C8AE0D9A
+lib/adafruit_hid/keyboard_layout_base.mpy | 1217 | 1536 | N/A | N/A | 417B6F9AEEF4437732B9E7F183FE90267726AFB2DA743F20620E146906EDA6CA
+lib/adafruit_hid/keyboard_layout_us.mpy | 338 | 512 | N/A | N/A | 633B594700DA02002936E4186EC4627530A51946430B3CCC7E3F01DB85013E3B
+lib/adafruit_hid/keyboard.mpy | 1203 | 1536 | N/A | N/A | 93A1CC07FC840FAA03EE4B97314931CD3EE3036EF08E2CD32D557D1D88C4288F
+lib/adafruit_hid/keycode.mpy | 1978 | 2048 | N/A | N/A | 3624ACDA9CC8F2273F92DD4D6BC834B9D6CED82FAA461A122F51C9EB1AF431CA
+lib/adafruit_hid/mouse.mpy | 856 | 1024 | N/A | N/A | EC4EA776032642C8084C82D8CBADCECE8E6E94EF900ABC739910B25360FCB009
+lib/adafruit_httpserver/__init__.mpy | 1622 | 2048 | N/A | N/A | B315EFB6108537644B1A2EFDC78B56A1067725EC0D4DC841BB4F28EA46A7ED88
+lib/adafruit_httpserver/authentication.mpy | 849 | 1024 | N/A | N/A | 7734429E1105CAA42AC123C8307A1C4C2146C0A045436C358F304FE1C0ACAD92
+lib/adafruit_httpserver/exceptions.mpy | 779 | 1024 | N/A | N/A | 3281B601CC526630F7003A814CFA9641FEFFB0B5A3047B3A9274DA3F29CDEC0B
+lib/adafruit_httpserver/headers.mpy | 1146 | 1536 | N/A | N/A | 259E0B09C2DE1D2992D0E20916F0A64BDB5F15FD9A205F1575001371E0FAE08A
+lib/adafruit_httpserver/interfaces.mpy | 1897 | 2048 | N/A | N/A | F1F491D1AE1D1990F87EC2EA5E326F5FB6E13DADD2E6E7182D4AFE98D72F69D6
+lib/adafruit_httpserver/methods.mpy | 155 | 512 | N/A | N/A | FCA53636607F862974B3A3241004D422054A62AC448B86537CA1F614AE0AA5CC
+lib/adafruit_httpserver/mime_types.mpy | 3445 | 3584 | N/A | N/A | E598EC3D68E046B0B74F8CC26E2B370C4A55AA86DFAC4EEA62F13D8177199871
+lib/adafruit_httpserver/request.mpy | 3819 | 4096 | N/A | N/A | 5B12586976D374A762639CA69D644EBEBB28C5DCD3DDA39FAFEA45767983FF38
+lib/adafruit_httpserver/response.mpy | 9105 | 9216 | N/A | N/A | B1018A10A10879C3BD6B91260D1CE2A1FDAD545EF74C975288E7791C900BCBF1
+lib/adafruit_httpserver/route.mpy | 1658 | 2048 | N/A | N/A | B23DEBB7B14EDE5431F6527A5354325E1EE90464185F2A602C62144ABB91D693
+lib/adafruit_httpserver/server.mpy | 6224 | 6656 | N/A | N/A | B7EBB0D8F65DB05B682C7B127AED013A444D70F72D6C869A13ABF2B4F71E8323
+lib/adafruit_httpserver/status.mpy | 1159 | 1536 | N/A | N/A | 2A08E2B8D0386B6F72E9D2A7B5A6A53CA80DD620087F78ED535126F8C8667459
+README.txt | 2303 | 2560 | 51 | 2300 | AA70EA1F5AC325C5F6CD221E736FFD09DF6FD100083B339FB9224913C0DD07D2
+sd/placeholder.txt | 57 | 512 | 1 | 57 | 3ED6F9ED83DECF1634C68AA0B270988BE63912F74373FF7649C5FCAFDFFD9269
+settings.toml | 166 | 512 | 8 | 166 | 40F75D4578AB115C55E027713370020E863B6369A1A4ED209D1B61A5D505FBB0
+settings.toml.example | 207 | 512 | 8 | 207 | 0BEF0F639BC8B21AD32AA0654CC0C27FB6C7EEF43FD212E2CAB5FF32FFED5703
+
+TIMESTAMPS
+==========
+All files except boot_out.txt report last-write UTC 2026-08-28T16:52:32Z.
+boot_out.txt reports last-write UTC 1999-12-31T22:00:02Z, a synthetic embedded-device FAT timestamp.
+
+NOTES
+=====
+1. Lines and characters do not exist as meaningful concepts for compiled MPY
+   bytecode or native RP2350 machine code. Their exact byte sizes and hashes
+   are reported instead.
+2. The UF2 container is exactly twice the payload size because each 512-byte
+   UF2 transport block carries 256 payload bytes plus headers and padding.
+3. The 2,617,856-byte USB disk exposure, 2,617,344-byte MBR partition, and
+   510,464-byte formatted FAT logical volume are separate layers and therefore
+   intentionally have different sizes.
+4. Wi-Fi passwords exist in settings.toml but are deliberately not printed in
+   this report. The file size and cryptographic hash are included.

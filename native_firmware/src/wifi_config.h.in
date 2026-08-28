@@ -1,0 +1,13 @@
+#pragma once
+
+struct WifiCredential {
+    const char *ssid;
+    const char *password;
+};
+
+inline constexpr WifiCredential WIFI_CREDENTIALS[] = {
+    {"@WIFI1_SSID_VALUE@", "@WIFI1_PASSWORD_VALUE@"},
+    {"@WIFI2_SSID_VALUE@", "@WIFI2_PASSWORD_VALUE@"},
+    {"@WIFI3_SSID_VALUE@", "@WIFI3_PASSWORD_VALUE@"},
+};
+
