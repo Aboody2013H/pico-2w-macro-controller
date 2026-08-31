@@ -25,6 +25,9 @@ prototype and is not required by the final firmware.
 - **v4.1.0 — Debug + Hidden Drive:** two otherwise identical v4.0.1 builds.
   DEBUG exposes the writable USB volume as `MACRO`; RELEASE-HIDDEN runs
   `storage.disable_usb_drive()` from `boot.py` so the volume stays hidden.
+- **v4.1.1 — Exclusive Touch Fix:** allows only one macro mode at a time,
+  prevents stale Space Turbo heartbeats, stops all macros before quick actions,
+  and distinguishes touch scrolling from an intentional hold.
 
 Release files in this repository are credential-free. Configure your networks
 in `settings.toml` after flashing; never commit that live file.

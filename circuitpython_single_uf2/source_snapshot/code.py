@@ -220,7 +220,11 @@ def poll_bootsel_button(now):
 
     sample = bootsel.pressed()
     if sample and not button_raw:
-        bootsel_click_active = not bootsel_click_active
+        if bootsel_click_active:
+            stop_bootsel_clicker()
+        else:
+            emergency_release_all()
+            bootsel_click_active = True
         print("BOOTSEL autoclicker:", "ON" if bootsel_click_active else "OFF")
         if (not bootsel_click_active and not mouse_active and fast_mouse_down):
             mouse.release(Mouse.LEFT_BUTTON)
@@ -699,9 +703,12 @@ def api_control_macro(request):
             raise ValueError("Macro not found")
         is_active = macro["id"] in active_ids()
         if command == "once" and macro["mode"] == "normal":
+            emergency_release_all()
             start_task(macro, False)
         elif command == "start" and macro["mode"] == "hold":
-            start_task(macro, True, True)
+            if not is_active:
+                emergency_release_all()
+                start_task(macro, True, True)
         elif command == "heartbeat" and macro["mode"] == "hold":
             for task in tasks:
                 if task["id"] == macro["id"]:
@@ -712,6 +719,7 @@ def api_control_macro(request):
             if is_active:
                 stop_task(macro["id"])
             else:
+                emergency_release_all()
                 start_task(macro, True)
         else:
             raise ValueError("Command does not match macro mode")
@@ -725,6 +733,7 @@ def mouse_start(request):
     global mouse_active, mouse_lease_until, mouse_arm_started
     now = time.monotonic()
     if not mouse_active:
+        emergency_release_all()
         print("Web hold activated: Mouse Turbo")
     mouse_active = True
     mouse_arm_started = now
@@ -747,6 +756,7 @@ def space_start(request):
     global next_space_tap
     now = time.monotonic()
     if not space_active:
+        emergency_release_all()
         print("Web hold activated: Space Turbo")
     space_active = True
     space_arm_started = now
@@ -767,7 +777,10 @@ def space_stop(request):
 @server.route("/walk/toggle")
 def walk_toggle(request):
     global walk_active
-    walk_active = not walk_active
+    turning_on = not walk_active
+    if turning_on:
+        emergency_release_all()
+    walk_active = turning_on
     print("Web action: AFK Walk", "ON" if walk_active else "OFF")
     if walk_active:
         if key_refs.get(Keycode.W, 0) == 0:
@@ -796,6 +809,7 @@ def tap_combo(keycodes, hold_seconds=0.08):
 
 @server.route("/ubuntu")
 def ubuntu(request):
+    emergency_release_all()
     print("Web action: Ubuntu Terminal")
     tap_combo((Keycode.CONTROL, Keycode.ALT, Keycode.T))
     return Response(request, "OK")
@@ -803,6 +817,7 @@ def ubuntu(request):
 
 @server.route("/cmd")
 def cmd(request):
+    emergency_release_all()
     print("Web action: Command Prompt")
     tap_combo((Keycode.WINDOWS, Keycode.R))
     time.sleep(0.15)
@@ -813,6 +828,7 @@ def cmd(request):
 
 @server.route("/altf4")
 def altf4(request):
+    emergency_release_all()
     print("Web action: Alt+F4")
     tap_combo((Keycode.ALT, Keycode.F4))
     return Response(request, "OK")
