@@ -41,7 +41,7 @@ yarn-error.log*
 **/build/
 **/build-*/
 /circuitpython_single_uf2/circuitpython-src/
-/circuitpython_single_uf2/__pycache__/
+**/__pycache__/
 
 # Generated filesystem images may embed private Wi-Fi settings.
 /circuitpython_single_uf2/*.img
