@@ -29,13 +29,8 @@ MAX_DELAY_MS = 60000
 MAX_REPEAT_MS = 600000
 HOLD_LEASE_SECONDS = 2.5
 BUILTIN_HOLD_LEASE_SECONDS = 1.5
-BUILTIN_HOLD_ARM_SECONDS = 0.250
 WIFI_CONNECT_TIMEOUT = 10
 WIFI_ATTEMPTS_PER_NETWORK = 2
-BUTTON_SAMPLE_SECONDS = 0.010
-BUTTON_DEBOUNCE_SECONDS = 0.050
-BOOTSEL_HOLD_SECONDS = 0.750
-BOOTSEL_RELEASE_ARM_SECONDS = 0.300
 CLICK_HALF_PERIOD_SECONDS = 0.001
 SPACE_TAP_INTERVAL_SECONDS = 1 / 60
 
@@ -179,19 +174,12 @@ walk_active = False
 bootsel_click_active = False
 fast_mouse_down = False
 button_raw = False
-button_stable = False
-button_changed_at = 0.0
-next_button_sample = 0.0
 next_click_transition = 0.0
 next_space_tap = 0.0
 mouse_lease_until = 0.0
 space_lease_until = 0.0
 mouse_arm_started = None
 space_arm_started = None
-button_press_started = None
-button_release_started = time.monotonic()
-button_toggle_latched = False
-bootsel_armed = False
 
 
 def stop_bootsel_clicker():
@@ -224,47 +212,22 @@ def emergency_release_all():
 
 
 def poll_bootsel_button(now):
-    """Toggle the local clicker from BOOTSEL, online or offline."""
+    """Toggle immediately on the BOOTSEL press edge, online or offline."""
     global bootsel_click_active, fast_mouse_down
-    global button_raw, button_stable, button_changed_at
-    global next_button_sample, next_click_transition
-    global button_press_started, button_release_started
-    global button_toggle_latched, bootsel_armed
+    global button_raw, next_click_transition
 
     if bootsel is None:
         return
 
-    if now >= next_button_sample:
-        next_button_sample = now + BUTTON_SAMPLE_SECONDS
-        sample = bootsel.pressed()
-        if sample != button_raw:
-            button_raw = sample
-            button_changed_at = now
-        if (button_raw != button_stable and
-                now - button_changed_at >= BUTTON_DEBOUNCE_SECONDS):
-            button_stable = button_raw
-            if button_stable:
-                button_press_started = now
-                button_toggle_latched = False
-            else:
-                button_press_started = None
-                button_release_started = now
-                button_toggle_latched = False
-
-        if not button_stable:
-            if now - button_release_started >= BOOTSEL_RELEASE_ARM_SECONDS:
-                bootsel_armed = True
-        elif (bootsel_armed and not button_toggle_latched and
-              button_press_started is not None and
-              now - button_press_started >= BOOTSEL_HOLD_SECONDS):
-            bootsel_click_active = not bootsel_click_active
-            next_click_transition = now
-            button_toggle_latched = True
-            bootsel_armed = False
-            if (not bootsel_click_active and not mouse_active and
-                    fast_mouse_down):
-                mouse.release(Mouse.LEFT_BUTTON)
-                fast_mouse_down = False
+    sample = bootsel.pressed()
+    if sample and not button_raw:
+        bootsel_click_active = not bootsel_click_active
+        next_click_transition = now
+        print("BOOTSEL autoclicker:", "ON" if bootsel_click_active else "OFF")
+        if (not bootsel_click_active and not mouse_active and fast_mouse_down):
+            mouse.release(Mouse.LEFT_BUTTON)
+            fast_mouse_down = False
+    button_raw = sample
 
 
 def run_fast_mouse_clicker(now):
@@ -759,12 +722,13 @@ def api_control_macro(request):
 @server.route("/mouse/start")
 def mouse_start(request):
     global mouse_active, mouse_lease_until, mouse_arm_started
+    global next_click_transition
     now = time.monotonic()
-    if mouse_arm_started is None:
-        mouse_arm_started = now
-    elif not mouse_active and now - mouse_arm_started >= BUILTIN_HOLD_ARM_SECONDS:
-        mouse_active = True
+    if not mouse_active:
         print("Web hold activated: Mouse Turbo")
+    mouse_active = True
+    mouse_arm_started = now
+    next_click_transition = now
     mouse_lease_until = now + BUILTIN_HOLD_LEASE_SECONDS
     return Response(request, "OK")
 
@@ -781,12 +745,13 @@ def mouse_stop(request):
 @server.route("/space/start")
 def space_start(request):
     global space_active, space_lease_until, space_arm_started
+    global next_space_tap
     now = time.monotonic()
-    if space_arm_started is None:
-        space_arm_started = now
-    elif not space_active and now - space_arm_started >= BUILTIN_HOLD_ARM_SECONDS:
-        space_active = True
+    if not space_active:
         print("Web hold activated: Space Turbo")
+    space_active = True
+    space_arm_started = now
+    next_space_tap = now
     space_lease_until = now + BUILTIN_HOLD_LEASE_SECONDS
     return Response(request, "OK")
 

@@ -15,15 +15,24 @@ from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
 from adafruit_hid.keycode import Keycode
 from adafruit_hid.mouse import Mouse
 
+try:
+    import bootsel
+except ImportError:
+    # The website still works on ordinary CircuitPython. BOOTSEL fallback is
+    # enabled by the custom all-in-one firmware.
+    bootsel = None
+
 
 MAX_MACROS = 12
 MAX_STEPS = 32
 MAX_DELAY_MS = 60000
 MAX_REPEAT_MS = 600000
 HOLD_LEASE_SECONDS = 2.5
+BUILTIN_HOLD_LEASE_SECONDS = 1.5
 WIFI_CONNECT_TIMEOUT = 10
-WIFI_LOSS_GRACE_SECONDS = 8
-WIFI_RETRY_SECONDS = 5
+WIFI_ATTEMPTS_PER_NETWORK = 2
+CLICK_HALF_PERIOD_SECONDS = 0.001
+SPACE_TAP_INTERVAL_SECONDS = 1 / 60
 
 
 try:
@@ -162,6 +171,97 @@ mouse_refs = {}
 mouse_active = False
 space_active = False
 walk_active = False
+bootsel_click_active = False
+fast_mouse_down = False
+button_raw = False
+next_click_transition = 0.0
+next_space_tap = 0.0
+mouse_lease_until = 0.0
+space_lease_until = 0.0
+mouse_arm_started = None
+space_arm_started = None
+
+
+def stop_bootsel_clicker():
+    global bootsel_click_active, fast_mouse_down
+    bootsel_click_active = False
+    if fast_mouse_down:
+        mouse.release(Mouse.LEFT_BUTTON)
+        fast_mouse_down = False
+
+
+def emergency_release_all():
+    """Fail closed: clear every mode and release all USB HID state."""
+    global mouse_active, space_active, walk_active
+    global mouse_lease_until, space_lease_until
+    global mouse_arm_started, space_arm_started
+    mouse_active = False
+    space_active = False
+    walk_active = False
+    mouse_lease_until = 0.0
+    space_lease_until = 0.0
+    mouse_arm_started = None
+    space_arm_started = None
+    stop_bootsel_clicker()
+    stop_all_custom()
+    key_refs.clear()
+    mouse_refs.clear()
+    keyboard.release_all()
+    mouse.release_all()
+    led.value = False
+
+
+def poll_bootsel_button(now):
+    """Toggle immediately on the BOOTSEL press edge, online or offline."""
+    global bootsel_click_active, fast_mouse_down
+    global button_raw, next_click_transition
+
+    if bootsel is None:
+        return
+
+    sample = bootsel.pressed()
+    if sample and not button_raw:
+        bootsel_click_active = not bootsel_click_active
+        next_click_transition = now
+        print("BOOTSEL autoclicker:", "ON" if bootsel_click_active else "OFF")
+        if (not bootsel_click_active and not mouse_active and fast_mouse_down):
+            mouse.release(Mouse.LEFT_BUTTON)
+            fast_mouse_down = False
+    button_raw = sample
+
+
+def run_fast_mouse_clicker(now):
+    """Generate 1 ms down/up reports for web and BOOTSEL activation."""
+    global fast_mouse_down, next_click_transition
+    active = bootsel_click_active or mouse_active
+    if not active:
+        if fast_mouse_down:
+            mouse.release(Mouse.LEFT_BUTTON)
+            fast_mouse_down = False
+        return
+
+    if now >= next_click_transition:
+        if fast_mouse_down:
+            mouse.release(Mouse.LEFT_BUTTON)
+        else:
+            mouse.press(Mouse.LEFT_BUTTON)
+        fast_mouse_down = not fast_mouse_down
+        next_click_transition = now + CLICK_HALF_PERIOD_SECONDS
+
+
+def service_builtin_holds(now):
+    """Stop a web hold automatically if its browser heartbeat disappears."""
+    global mouse_active, space_active, next_space_tap
+    global mouse_arm_started, space_arm_started
+    if mouse_arm_started is not None and now > mouse_lease_until:
+        mouse_active = False
+        mouse_arm_started = None
+    if space_arm_started is not None and now > space_lease_until:
+        space_active = False
+        space_arm_started = None
+    if space_active and now >= next_space_tap:
+        key_tap("SPACE")
+        next_space_tap = now + SPACE_TAP_INTERVAL_SECONDS
 
 
 def save_macros():
@@ -414,6 +514,25 @@ networks = [
 ]
 
 
+def service_macros_during_wifi():
+    """Keep local controls and running macros responsive during a scan."""
+    now = time.monotonic()
+    poll_bootsel_button(now)
+    run_macro_engine(now)
+    service_builtin_holds(now)
+    run_fast_mouse_clicker(time.monotonic())
+    led.value = bool(bootsel_click_active or mouse_active or
+                     space_active or walk_active or tasks)
+
+
+def wifi_settle(seconds=0.6):
+    """Let the CYW43 driver settle while local controls remain responsive."""
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        service_macros_during_wifi()
+        time.sleep(0.01)
+
+
 def scan_wifi_names():
     """Return visible SSIDs without letting a failed scan stop recovery."""
     available = []
@@ -421,6 +540,7 @@ def scan_wifi_names():
     try:
         scanning = True
         for network in wifi.radio.start_scanning_networks():
+            service_macros_during_wifi()
             if network.ssid not in available:
                 available.append(network.ssid)
     except Exception as error:
@@ -436,7 +556,11 @@ def scan_wifi_names():
 
 
 def connect_saved_network():
-    """Try WIFI1, then WIFI2, then WIFI3; return True on success."""
+    """Run the single boot-time WIFI1/WIFI2/WIFI3 connection pass."""
+    try:
+        wifi.radio.start_station()
+    except Exception:
+        pass
     configured = [(ssid, password) for ssid, password in networks
                   if ssid and password]
     if not configured:
@@ -445,31 +569,36 @@ def connect_saved_network():
 
     print("Scanning WiFi networks...")
     available = scan_wifi_names()
-    if available is None:
-        candidates = configured
-    else:
-        candidates = [(ssid, password) for ssid, password in configured
-                      if ssid in available]
+    if available is not None:
+        visible_saved = [ssid for ssid, _password in configured
+                         if ssid in available]
+        if visible_saved:
+            print("Visible saved WiFi:", ", ".join(visible_saved))
+        else:
+            print("No saved WiFi appeared in scan; trying all anyway")
 
-    if not candidates:
-        print("None of the saved WiFi networks are visible")
-        return False
-
-    for ssid, password in candidates:
-        try:
-            print("Trying WiFi:", ssid)
-            wifi.radio.connect(ssid, password, timeout=WIFI_CONNECT_TIMEOUT)
-            if wifi.radio.connected and wifi.radio.ipv4_address is not None:
-                print("Connected to:", ssid)
-                return True
-        except Exception as error:
-            print("WiFi failed:", ssid, error)
+    # A single scan can miss a network, especially a phone hotspot. Always try
+    # every configured entry in priority order so WIFI2/WIFI3 are true fallbacks.
+    for ssid, password in configured:
+        for attempt in range(1, WIFI_ATTEMPTS_PER_NETWORK + 1):
+            try:
+                service_macros_during_wifi()
+                print("Trying WiFi: {} ({}/{})".format(
+                    ssid, attempt, WIFI_ATTEMPTS_PER_NETWORK))
+                # connect() performs its own station reset on RP2350.
+                wifi.radio.connect(ssid, password,
+                                   timeout=WIFI_CONNECT_TIMEOUT)
+                service_macros_during_wifi()
+                if (wifi.radio.connected and
+                        wifi.radio.ipv4_address is not None):
+                    print("Connected to:", ssid)
+                    return True
+            except Exception as error:
+                print("WiFi failed:", ssid, error)
+            service_macros_during_wifi()
+            wifi_settle()
     return False
 
-
-while not connect_saved_network():
-    print("Retrying saved WiFi networks in", WIFI_RETRY_SECONDS, "seconds")
-    time.sleep(WIFI_RETRY_SECONDS)
 
 pool = socketpool.SocketPool(wifi.radio)
 server = Server(pool)
@@ -479,12 +608,18 @@ server.request_buffer_size = 12288
 
 @server.route("/", GET)
 def home(request):
-    return FileResponse(request, "index.html", "/")
+    return FileResponse(request, "index.html", "/", headers={
+        "Cache-Control": "no-store, max-age=0",
+        "Pragma": "no-cache",
+    })
 
 
 @server.route("/builder", GET)
 def builder(request):
-    return FileResponse(request, "builder.html", "/")
+    return FileResponse(request, "builder.html", "/", headers={
+        "Cache-Control": "no-store, max-age=0",
+        "Pragma": "no-cache",
+    })
 
 
 @server.route("/api/macros", GET)
@@ -496,7 +631,7 @@ def get_macros(request):
 def get_status(request):
     return JSONResponse(request, {
         "active": active_ids(),
-        "mouse": mouse_active,
+        "mouse": mouse_active or bootsel_click_active,
         "space": space_active,
         "walk": walk_active,
     })
@@ -586,29 +721,47 @@ def api_control_macro(request):
 
 @server.route("/mouse/start")
 def mouse_start(request):
-    global mouse_active
+    global mouse_active, mouse_lease_until, mouse_arm_started
+    global next_click_transition
+    now = time.monotonic()
+    if not mouse_active:
+        print("Web hold activated: Mouse Turbo")
     mouse_active = True
+    mouse_arm_started = now
+    next_click_transition = now
+    mouse_lease_until = now + BUILTIN_HOLD_LEASE_SECONDS
     return Response(request, "OK")
 
 
 @server.route("/mouse/stop")
 def mouse_stop(request):
-    global mouse_active
+    global mouse_active, mouse_lease_until, mouse_arm_started
     mouse_active = False
+    mouse_lease_until = 0.0
+    mouse_arm_started = None
     return Response(request, "OK")
 
 
 @server.route("/space/start")
 def space_start(request):
-    global space_active
+    global space_active, space_lease_until, space_arm_started
+    global next_space_tap
+    now = time.monotonic()
+    if not space_active:
+        print("Web hold activated: Space Turbo")
     space_active = True
+    space_arm_started = now
+    next_space_tap = now
+    space_lease_until = now + BUILTIN_HOLD_LEASE_SECONDS
     return Response(request, "OK")
 
 
 @server.route("/space/stop")
 def space_stop(request):
-    global space_active
+    global space_active, space_lease_until, space_arm_started
     space_active = False
+    space_lease_until = 0.0
+    space_arm_started = None
     return Response(request, "OK")
 
 
@@ -616,6 +769,7 @@ def space_stop(request):
 def walk_toggle(request):
     global walk_active
     walk_active = not walk_active
+    print("Web action: AFK Walk", "ON" if walk_active else "OFF")
     if walk_active:
         if key_refs.get(Keycode.W, 0) == 0:
             keyboard.press(Keycode.W)
@@ -643,12 +797,14 @@ def tap_combo(keycodes, hold_seconds=0.08):
 
 @server.route("/ubuntu")
 def ubuntu(request):
+    print("Web action: Ubuntu Terminal")
     tap_combo((Keycode.CONTROL, Keycode.ALT, Keycode.T))
     return Response(request, "OK")
 
 
 @server.route("/cmd")
 def cmd(request):
+    print("Web action: Command Prompt")
     tap_combo((Keycode.WINDOWS, Keycode.R))
     time.sleep(0.15)
     layout.write("cmd")
@@ -658,94 +814,65 @@ def cmd(request):
 
 @server.route("/altf4")
 def altf4(request):
+    print("Web action: Alt+F4")
     tap_combo((Keycode.ALT, Keycode.F4))
     return Response(request, "OK")
 
 
 @server.route("/stop")
 def stop(request):
-    global mouse_active, space_active, walk_active
-    mouse_active = False
-    space_active = False
-    walk_active = False
-    stop_all_custom()
-    key_refs.clear()
-    mouse_refs.clear()
-    keyboard.release_all()
-    mouse.release_all()
-    led.value = False
+    emergency_release_all()
     return Response(request, "STOPPED")
 
 
-server.start(str(wifi.radio.ipv4_address), port=80)
-print("Open: http://{}".format(wifi.radio.ipv4_address))
+server_running = False
+if connect_saved_network():
+    server.start(str(wifi.radio.ipv4_address), port=80)
+    server_running = True
+    print("Open: http://{}".format(wifi.radio.ipv4_address))
+else:
+    try:
+        wifi.radio.stop_station()
+    except Exception:
+        pass
+    print("No saved network found. WiFi stopped until the next reboot.")
+    print("Offline mode: press BOOTSEL to toggle the autoclicker")
 
-server_running = True
-wifi_lost_at = None
-next_wifi_retry = 0
+wifi_offline_reported = not server_running
 
 while True:
     try:
         now = time.monotonic()
+        poll_bootsel_button(now)
 
         wifi_ready = (wifi.radio.connected and
                       wifi.radio.ipv4_address is not None)
 
         if wifi_ready:
-            wifi_lost_at = None
+            wifi_offline_reported = False
             if not server_running:
                 server.start(str(wifi.radio.ipv4_address), port=80)
                 server_running = True
                 print("Open: http://{}".format(wifi.radio.ipv4_address))
             server.poll()
         else:
-            if wifi_lost_at is None:
-                wifi_lost_at = now
-                print("WiFi connection lost; waiting briefly for reconnect")
-                mouse_active = False
-                space_active = False
-                walk_active = False
-                stop_all_custom()
-                key_refs.clear()
-                mouse_refs.clear()
-                keyboard.release_all()
-                mouse.release_all()
-                led.value = False
-
-            if (now - wifi_lost_at >= WIFI_LOSS_GRACE_SECONDS and
-                    now >= next_wifi_retry):
-                next_wifi_retry = now + WIFI_RETRY_SECONDS
-                if server_running:
-                    try:
-                        server.stop()
-                    except Exception as error:
-                        print("Web server stop:", error)
-                    server_running = False
-
+            if server_running:
                 try:
-                    wifi.radio.stop_station()
-                except Exception:
-                    pass
-                time.sleep(0.2)
-                wifi.radio.start_station()
-
-                if connect_saved_network():
-                    wifi_lost_at = None
-                    next_wifi_retry = 0
+                    server.stop()
+                except Exception as error:
+                    print("Web server stop:", error)
+                server_running = False
+            if not wifi_offline_reported:
+                print("WiFi lost. No rescan until Ctrl+D or power cycle.")
+                wifi_offline_reported = True
 
         run_macro_engine(now)
+        service_builtin_holds(now)
+        run_fast_mouse_clicker(time.monotonic())
 
-        if mouse_active:
-            mouse_click("MOUSE_LEFT")
-        if space_active:
-            key_tap("SPACE")
-
-        led.value = bool(mouse_active or space_active or walk_active or tasks)
+        led.value = bool(bootsel_click_active or mouse_active or
+                         space_active or walk_active or tasks)
     except Exception as error:
         print("Main loop error:", error)
-        stop_all_custom()
-        key_refs.clear()
-        mouse_refs.clear()
-        keyboard.release_all()
-        mouse.release_all()
+        emergency_release_all()
         time.sleep(0.1)

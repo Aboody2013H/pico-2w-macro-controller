@@ -16,6 +16,9 @@ prototype and is not required by the final firmware.
 - **v3.0.0 — Complete Combined Build:** custom CircuitPython, web dashboard,
   macro builder, BOOTSEL autoclicker, 1 ms HID polling, and writable CIRCUITPY
   filesystem in one UF2.
+- **v4.0.0 — Instant Response:** the complete combined build with BOOTSEL
+  press-edge toggling and immediate website Mouse/Space activation. The former
+  750 ms BOOTSEL hold and 250 ms web arming waits are removed.
 
 Release files in this repository are credential-free. Configure your networks
 in `settings.toml` after flashing; never commit that live file.
