@@ -31,7 +31,7 @@ HOLD_LEASE_SECONDS = 2.5
 BUILTIN_HOLD_LEASE_SECONDS = 1.5
 WIFI_CONNECT_TIMEOUT = 10
 WIFI_ATTEMPTS_PER_NETWORK = 2
-CLICK_HALF_PERIOD_SECONDS = 0.001
+FAST_CLICK_BURST = 8
 SPACE_TAP_INTERVAL_SECONDS = 1 / 60
 
 
@@ -174,7 +174,6 @@ walk_active = False
 bootsel_click_active = False
 fast_mouse_down = False
 button_raw = False
-next_click_transition = 0.0
 next_space_tap = 0.0
 mouse_lease_until = 0.0
 space_lease_until = 0.0
@@ -214,7 +213,7 @@ def emergency_release_all():
 def poll_bootsel_button(now):
     """Toggle immediately on the BOOTSEL press edge, online or offline."""
     global bootsel_click_active, fast_mouse_down
-    global button_raw, next_click_transition
+    global button_raw
 
     if bootsel is None:
         return
@@ -222,7 +221,6 @@ def poll_bootsel_button(now):
     sample = bootsel.pressed()
     if sample and not button_raw:
         bootsel_click_active = not bootsel_click_active
-        next_click_transition = now
         print("BOOTSEL autoclicker:", "ON" if bootsel_click_active else "OFF")
         if (not bootsel_click_active and not mouse_active and fast_mouse_down):
             mouse.release(Mouse.LEFT_BUTTON)
@@ -231,8 +229,8 @@ def poll_bootsel_button(now):
 
 
 def run_fast_mouse_clicker(now):
-    """Generate 1 ms down/up reports for web and BOOTSEL activation."""
-    global fast_mouse_down, next_click_transition
+    """Run complete click pairs at the 1 ms HID endpoint's full rate."""
+    global fast_mouse_down
     active = bootsel_click_active or mouse_active
     if not active:
         if fast_mouse_down:
@@ -240,13 +238,16 @@ def run_fast_mouse_clicker(now):
             fast_mouse_down = False
         return
 
-    if now >= next_click_transition:
-        if fast_mouse_down:
-            mouse.release(Mouse.LEFT_BUTTON)
-        else:
-            mouse.press(Mouse.LEFT_BUTTON)
-        fast_mouse_down = not fast_mouse_down
-        next_click_transition = now + CLICK_HALF_PERIOD_SECONDS
+    # usb_hid.send_report() already waits for the next 1 ms endpoint slot.
+    # A click is exactly two reports (down + up), so no additional Python timer
+    # belongs here. Short bursts amortize web-loop overhead while preserving an
+    # approximately 16 ms worst-case stop/poll response time.
+    fast_mouse_down = False
+    for _ in range(FAST_CLICK_BURST):
+        if not (bootsel_click_active or mouse_active):
+            break
+        mouse.click(Mouse.LEFT_BUTTON)
+        poll_bootsel_button(time.monotonic())
 
 
 def service_builtin_holds(now):
@@ -722,13 +723,11 @@ def api_control_macro(request):
 @server.route("/mouse/start")
 def mouse_start(request):
     global mouse_active, mouse_lease_until, mouse_arm_started
-    global next_click_transition
     now = time.monotonic()
     if not mouse_active:
         print("Web hold activated: Mouse Turbo")
     mouse_active = True
     mouse_arm_started = now
-    next_click_transition = now
     mouse_lease_until = now + BUILTIN_HOLD_LEASE_SECONDS
     return Response(request, "OK")
 

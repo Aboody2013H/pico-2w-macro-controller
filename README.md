@@ -19,6 +19,9 @@ prototype and is not required by the final firmware.
 - **v4.0.0 — Instant Response:** the complete combined build with BOOTSEL
   press-edge toggling and immediate website Mouse/Space activation. The former
   750 ms BOOTSEL hold and 250 ms web arming waits are removed.
+- **v4.0.1 — Full 500 CPS:** removes duplicate Python-side click pacing and
+  drives complete press/release pairs at the 1 ms USB HID endpoint limit for
+  both BOOTSEL and website Mouse Turbo.
 
 Release files in this repository are credential-free. Configure your networks
 in `settings.toml` after flashing; never commit that live file.
