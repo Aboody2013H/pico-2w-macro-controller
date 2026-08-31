@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a compact, writable CIRCUITPY FAT image for the combined UF2."""
+"""Create a compact, writable FAT image for the combined UF2."""
 
 from __future__ import annotations
 
@@ -31,7 +31,23 @@ def main() -> None:
     parser.add_argument("merged_code", type=Path)
     parser.add_argument("merged_index", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument(
+        "--label",
+        default="CIRCUITPY",
+        help="FAT volume label shown by the host (maximum 11 characters)",
+    )
+    parser.add_argument(
+        "--boot-py",
+        type=Path,
+        help="optional boot.py to include in the filesystem image",
+    )
     args = parser.parse_args()
+
+    volume_label = args.label.strip().upper()
+    if not volume_label or len(volume_label) > 11:
+        parser.error("--label must contain 1 to 11 characters")
+    if args.boot_py is not None and not args.boot_py.is_file():
+        parser.error("--boot-py must name an existing file")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     if args.output.exists():
@@ -46,7 +62,7 @@ def main() -> None:
         size=COMPACT_FILESYSTEM_SIZE,
         sector_size=512,
         number_of_fats=1,
-        label="CIRCUITPY",
+        label=volume_label,
     )
     fat.close()
 
@@ -66,6 +82,8 @@ def main() -> None:
             "settings.toml.example": args.snapshot / "settings.toml.example",
             "README.txt": args.snapshot / "README.txt",
         }
+        if args.boot_py is not None:
+            files["boot.py"] = args.boot_py
         for destination, source in files.items():
             if source.exists():
                 with source.open("rb") as source_file:
@@ -73,7 +91,10 @@ def main() -> None:
     finally:
         fs.close()
 
-    print(f"Wrote compact CIRCUITPY image: {args.output} ({args.output.stat().st_size} bytes)")
+    print(
+        f"Wrote compact {volume_label} image: {args.output} "
+        f"({args.output.stat().st_size} bytes)"
+    )
 
 
 if __name__ == "__main__":

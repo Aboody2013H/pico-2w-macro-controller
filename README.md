@@ -22,6 +22,9 @@ prototype and is not required by the final firmware.
 - **v4.0.1 — Full 500 CPS:** removes duplicate Python-side click pacing and
   drives complete press/release pairs at the 1 ms USB HID endpoint limit for
   both BOOTSEL and website Mouse Turbo.
+- **v4.1.0 — Debug + Hidden Drive:** two otherwise identical v4.0.1 builds.
+  DEBUG exposes the writable USB volume as `MACRO`; RELEASE-HIDDEN runs
+  `storage.disable_usb_drive()` from `boot.py` so the volume stays hidden.
 
 Release files in this repository are credential-free. Configure your networks
 in `settings.toml` after flashing; never commit that live file.
